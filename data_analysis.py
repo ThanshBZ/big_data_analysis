@@ -1,18 +1,13 @@
-import matplotlib
-
-matplotlib.use('TkAgg')  # Use TkAgg for PyCharm compatibility. Adjust if necessary.
-
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import read_data
 from scipy.stats import pointbiserialr
 from scipy.stats import pearsonr
 
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+from xgboost import XGBRegressor
 
 
 def replace_values_or_strings(data_array, list_original_values, list_final_values):
@@ -35,63 +30,45 @@ def replace_values_or_strings(data_array, list_original_values, list_final_value
         return [replacement_dict.get(item, item) for item in data_array]
 
 
-def plot_marks_scored_before_pandemic_in_traditional_classroom(df):
-    # replace values
-    x = np.array(df['Average marks scored before pandemic in traditional classroom'])
-    list_original_values = ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70', '71-80',
-                            '81-90', '91-100']
-    list_final_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    xx = replace_values_or_strings(x, list_original_values, list_final_values)
-    # create a temporary dataframe
-    df_copy = pd.DataFrame({"Average marks scored before pandemic in traditional classroom": xx}).reset_index(drop=True)
+def replace_strings_in_dataset_with_integer(df):
+    df_tmp = pd.DataFrame()
+    for column in df.select_dtypes(exclude=['object']).columns:
+        df_tmp[column] = df[column]
 
-    plt.figure(figsize=(18, 12))
-    sns.set(style='darkgrid')
-    sns.countplot(x='Average marks scored before pandemic in traditional classroom', data=df_copy, palette='Dark2',
-                  hue='Average marks scored before pandemic in traditional classroom', legend=False)
-    plt.ylim(0, 350)
-    plt.title('Average marks scored before pandemic in traditional classroom', size=20)
-    plt.xlabel('Average marks scored before pandemic in traditional classroom', weight='bold', fontsize=18)
-    plt.ylabel('Number of students', weight='bold', fontsize=18)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
-    plt.savefig("results/Average marks scored before pandemic in traditional classroom.png")
-    # plt.show()
+    df_tmp['Gender'] = df['Gender'].map({'Female': 0, 'Male': 1})
+    df_tmp['Home Location'] = df['Home Location'].map({'Rural': 0, 'Urban': 1})
+    df_tmp['Level of Education'] = df['Level of Education'].map({'School': 0, 'Under Graduate': 1, 'Post Graduate': 2})
+    df_tmp['Device type used to attend classes'] = \
+        df['Device type used to attend classes'].map({'Mobile': 0, 'Laptop': 1, 'Desktop': 2})
+    df_tmp['Economic status'] = df['Economic status'].map({'Poor': 0, 'Middle Class': 1, 'Rich': 2})
+    df_tmp['Are you involved in any sports?'] = df['Are you involved in any sports?'].map({'No': 0, 'Yes': 1})
+    df_tmp['Do elderly people monitor you?'] = df['Do elderly people monitor you?'].map({'No': 0, 'Yes': 1})
+    df_tmp['Interested in Gaming?'] = df['Interested in Gaming?'].map({'No': 0, 'Yes': 1})
+    df_tmp['Have separate room for studying?'] = df['Have separate room for studying?'].map({'No': 0, 'Yes': 1})
+    df_tmp['Engaged in group studies?'] = df['Engaged in group studies?'].map({'No': 0, 'yes': 1})
+    df_tmp['Average marks scored before pandemic in traditional classroom'] = \
+        df['Average marks scored before pandemic in traditional classroom'].map({
+            '0-10': 1,
+            '11-20': 2,
+            '21-30': 3,
+            '31-40': 4,
+            '41-50': 5,
+            '51-60': 6,
+            '61-70': 7,
+            '71-80': 8,
+            '81-90': 9,
+            '91-100': 10
+        })
+    df_tmp['Interested in?'] = df['Interested in?'].map({'Theory': 0, 'Practical': 1, 'Both': 2})
+    df_tmp['Your level of satisfaction in Online Education'] = \
+        df['Your level of satisfaction in Online Education'].map({'Bad': 0, 'Average': 1, 'Good': 2})
 
-
-def plot_performance_in_online(df):
-    plt.figure(figsize=(18, 12))
-    sns.set(style='darkgrid')
-    sns.countplot(x='Performance in online', data=df, palette='Dark2',
-                  hue='Performance in online', legend=False)
-    plt.ylim(0, 350)
-    plt.title('Performance in online', size=20)
-    plt.xlabel('Performance in online', weight='bold', fontsize=18)
-    plt.ylabel('Number of students', weight='bold', fontsize=18)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
-    plt.savefig("results/Performance in online.png")
-
-
-def plot_level_of_education(df):
-    plt.figure(figsize=(18, 12))
-    sns.countplot(x='Level of Education', data=df, palette='Dark2',
-                  hue='Level of Education', legend=False)
-    plt.title('Level of Education', weight='bold', size=20)
-    plt.xlabel('Level of Education', weight='bold', fontsize=18)
-    plt.ylabel('Number of students', weight='bold', fontsize=18)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
-    plt.savefig("results/Level of Education.png")
+    return df_tmp
 
 
 def analyze_coorelation_between_home_location_and_internet_facility(df):
-    df_tmp = pd.DataFrame()
-    df_tmp['Home Location'] = df['Home Location'].map({'Urban': 1, 'Rural': 0})
-    df_tmp['Internet facility in your locality'] = df['Internet facility in your locality']
-
     # Assuming 'Internet facility in your locality' is numerical
-    correlation, p_value = pointbiserialr(df_tmp['Home Location'], df_tmp['Internet facility in your locality'])
+    correlation, p_value = pointbiserialr(df['Home Location'], df['Internet facility in your locality'])
     # print(f"\nPoint Biserial Correlation: {correlation}, P-value: {p_value}")
 
     correlation_df = pd.DataFrame({
@@ -103,55 +80,68 @@ def analyze_coorelation_between_home_location_and_internet_facility(df):
         correlation_df.to_excel(writer, sheet_name='correlation')
 
 
-def plot_device_types(df):
-    plt.figure(figsize=(18, 12))
-    sns.countplot(x='Device type used to attend classes', data=df, palette='Dark2',
-                  hue='Device type used to attend classes', legend=False)
-    plt.title('Device type used to attend classes', weight='bold', size=20)
-    plt.xlabel('Device type used to attend classes', weight='bold', fontsize=18)
-    plt.ylabel('Number of students', weight='bold', fontsize=18)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
-    plt.savefig("results/Device type used to attend classes.png")
-
-
 def analyze_important_factors_to_performance_in_online(df):
-    label_encoder = LabelEncoder()
-    label_mappings = {}
-    for column in df.select_dtypes(include=['object']).columns:
-        df[column] = label_encoder.fit_transform(df[column])
-        label_mappings[column] = {index: label for index, label in enumerate(label_encoder.classes_)}
-    print(label_mappings)
-    # print(df.head())
-
-    # Splitting the dataset into training and testing sets
+    # Splitting the dataset into features and target variable
     X = df.drop('Performance in online', axis=1)
     y = df['Performance in online']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Initializing and training the Decision Tree Regressor
-    dt_regressor = DecisionTreeRegressor(random_state=42)
-    dt_regressor.fit(X_train, y_train)
+    # Split the data into training and test sets
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Feature importance
-    feature_importance = pd.Series(dt_regressor.feature_importances_, index=X.columns).sort_values(ascending=False)
-    feature_importance_df = pd.DataFrame(feature_importance).reset_index()
-    feature_importance_df.columns = ['Feature', 'Importance']
+    # Initialize the Random Forest Regressor
+    rf_regressor = RandomForestRegressor(n_estimators=100, random_state=42, min_samples_split=10, min_samples_leaf=10)
 
-    with pd.ExcelWriter('results/feature_importance_to_performance_in_online.xlsx', engine='openpyxl') \
-            as writer:
-        feature_importance_df.to_excel(writer, sheet_name='feature_importance')
+    # Perform cross-validation
+    cv_scores = cross_val_score(rf_regressor, X, y, cv=5, scoring='r2')  # 5-fold cross-validation
+
+    # Print the cross-validation scores
+    print("Cross-validation R^2 scores:", cv_scores)
+    print("Mean cross-validation R^2 score:", cv_scores.mean())
+
+    # Fit the model on the training data
+    rf_regressor.fit(X, y)
+
+    # Predict on the test data
+    # y_pred = rf_regressor.predict(X_test)
+    #
+    # # Evaluate the model
+    # mse = mean_squared_error(y_test, y_pred)
+    # print(f"Mean Squared Error: {mse}")
+
+    # Get feature importances
+    feature_importances = rf_regressor.feature_importances_
+    feature_importance_df = pd.DataFrame({'Feature': X.columns, 'Importance': feature_importances}).sort_values(
+        by='Importance', ascending=False)
+
+    # Save the feature importances to an Excel file
+    with pd.ExcelWriter('results/feature_importance_to_performance_in_online.xlsx', engine='openpyxl') as writer:
+        feature_importance_df.to_excel(writer, sheet_name='feature_importance', index=False)
+
+    # # Initialize the XGBoost Regressor
+    # xgb_regressor = XGBRegressor(n_estimators=100, random_state=42, learning_rate=0.1,
+    #                              objective='reg:squarederror', max_depth=3, min_child_weight=10)
+    #
+    # # Perform cross-validation
+    # cv_scores = cross_val_score(xgb_regressor, X, y, cv=5, scoring='r2')
+    #
+    # # Convert scores to positive values and print
+    # print("Cross-validation R^2 scores:", cv_scores)
+    # print("Mean cross-validation R^2 score:", cv_scores.mean())
+    #
+    # # Fit the model on the entire dataset
+    # xgb_regressor.fit(X, y)
+    #
+    # # Get feature importances
+    # feature_importances = xgb_regressor.feature_importances_
+    # feature_importance_df = pd.DataFrame({'Feature': X.columns, 'Importance': feature_importances}).sort_values(
+    #     by='Importance', ascending=False)
+    #
+    # # Save the feature importances to an Excel file
+    # with pd.ExcelWriter('results/feature_importance_to_performance_in_online.xlsx', engine='openpyxl') as writer:
+    #     feature_importance_df.to_excel(writer, sheet_name='feature_importance', index=False)
 
 
-def analyze_important_factors_to_internet_facility(df):
-    label_encoder = LabelEncoder()
-    label_mappings = {}
-    for column in df.select_dtypes(include=['object']).columns:
-        df[column] = label_encoder.fit_transform(df[column])
-        label_mappings[column] = {index: label for index, label in enumerate(label_encoder.classes_)}
-    print(label_mappings)
-
-
+def analyze_correlation_matrix(df):
     correlation_data = []
 
     columns = df.columns

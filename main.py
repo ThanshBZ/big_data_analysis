@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import read_data
 import data_analysis
+import data_visualization
 import os
 import shutil
-
 
 if __name__ == '__main__':
     # set pandas options
@@ -27,22 +27,26 @@ if __name__ == '__main__':
                         'management - Common Resources/Big Data Team Project/archive/ONLINE EDUCATION SYSTEM REVIEW.csv'
     df_data = read_data.read_and_inspect_data(path=dataset_file_path)
 
-    # analyze data
-    # 1. plot "Average marks scored before pandemic in traditional classroom"
-    data_analysis.plot_marks_scored_before_pandemic_in_traditional_classroom(df_data)
-    # 2. plot "Performance in online"
-    data_analysis.plot_performance_in_online(df_data)
-    # 3. plot "Level of Education"
-    data_analysis.plot_level_of_education(df_data)
-    # 4. analyze the correlation between "Home Location" and "Internet facility in your locality"
-    data_analysis.analyze_coorelation_between_home_location_and_internet_facility(df_data)
-    # 5. plot "Device type used to attend classes"
-    data_analysis.plot_device_types(df_data)
-    # 6. analyze the importance of different factors to "Performance in online"
-    data_analysis.analyze_important_factors_to_performance_in_online(df_data)
+    df_numeric = data_analysis.replace_strings_in_dataset_with_integer(df_data)
 
-    data_analysis.analyze_important_factors_to_internet_facility(df_data)
+    # analyze data
+    # # 1. analyze the correlation between "Home Location" and "Internet facility in your locality"
+    # data_analysis.analyze_coorelation_between_home_location_and_internet_facility(df_numeric)
+    # 2. analyze the importance of different factors to "Performance in online"
+    data_analysis.analyze_important_factors_to_performance_in_online(df_numeric)
+    # 3. analyze all correlations
+    data_analysis.analyze_correlation_matrix(df_numeric)
+
+    # data visualization
+    # 1. plot "Average marks scored before pandemic in traditional classroom"
+    data_visualization.plot_marks_scored_before_pandemic_in_traditional_classroom(df_numeric)
+    # 2. plot "Performance in online"
+    data_visualization.plot_performance_in_online(df_data)
+    # 3. plot "Level of Education"
+    data_visualization.plot_level_of_education(df_data)
+    # 4. plot "Device type used to attend classes"
+    data_visualization.plot_device_types(df_data)
+    # 5. plot the correlation matrix
+    data_visualization.plot_correlation_matrix()
 
     print("Results!!!: The data analysis results have been written into the folder \"results\"")
-
-
