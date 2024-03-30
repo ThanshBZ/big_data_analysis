@@ -74,9 +74,7 @@ def analyze_important_factors_to_performance_in_online(df):
     # Perform cross-validation
     cv_scores = cross_val_score(rf_regressor, X, y, cv=5, scoring='r2')  # 5-fold cross-validation
 
-    # Print the cross-validation scores
-    print("Cross-validation R^2 scores:", cv_scores)
-    print("Mean cross-validation R^2 score:", cv_scores.mean())
+    cv_scores_df = pd.DataFrame({'Cross-validation R^2 scores': cv_scores})
 
     # Fit the model on the training data
     rf_regressor.fit(X, y)
@@ -96,6 +94,7 @@ def analyze_important_factors_to_performance_in_online(df):
     # Save the feature importances to an Excel file
     with pd.ExcelWriter('results/feature_importance_to_performance_in_online.xlsx', engine='openpyxl') as writer:
         feature_importance_df.to_excel(writer, sheet_name='feature_importance', index=False)
+        cv_scores_df.to_excel(writer, sheet_name='cv_scores', index=True)
 
     # # Initialize the XGBoost Regressor
     # xgb_regressor = XGBRegressor(n_estimators=100, random_state=42, learning_rate=0.1,
@@ -144,4 +143,5 @@ def analyze_correlation_matrix(df):
     sorted_coor_results = \
         correlation_results.sort_values(by='Correlation Coefficient', ascending=False).reset_index(drop=True)
     # print(sorted_coor_results)
-    sorted_coor_results.to_excel("results/correlation_matrix.xlsx", index=False, engine='openpyxl')
+    sorted_coor_results.to_excel("results/correlation_matrix.xlsx", sheet_name='correlation_matrix',
+                                 index=False, engine='openpyxl')
