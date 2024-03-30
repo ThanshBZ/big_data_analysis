@@ -10,26 +10,6 @@ from sklearn.metrics import mean_squared_error
 from xgboost import XGBRegressor
 
 
-def replace_values_or_strings(data_array, list_original_values, list_final_values):
-    if len(list_original_values) != len(list_final_values):
-        print(
-            "Error!!!: The lengths of \"list_original_values\" and \"list_final_values\" are not equal. Please check!")
-        read_data.get_error_info()
-        exit(-3)
-
-    # Using a dictionary for mapping original values to replacement values for efficiency
-    replacement_dict = dict(zip(list_original_values, list_final_values))
-
-    # Replace values for numpy arrays
-    if isinstance(data_array, np.ndarray):
-        # Vectorized replacement using numpy
-        return np.vectorize(replacement_dict.get)(data_array, data_array)
-    # Replace values for lists or other iterable types
-    else:
-        # Using list comprehension for replacements
-        return [replacement_dict.get(item, item) for item in data_array]
-
-
 def replace_strings_in_dataset_with_integer(df):
     df_tmp = pd.DataFrame()
     for column in df.select_dtypes(exclude=['object']).columns:
@@ -164,4 +144,4 @@ def analyze_correlation_matrix(df):
     sorted_coor_results = \
         correlation_results.sort_values(by='Correlation Coefficient', ascending=False).reset_index(drop=True)
     # print(sorted_coor_results)
-    sorted_coor_results.to_excel("results/correlation_matrix.xlsx", index=True, engine='openpyxl')
+    sorted_coor_results.to_excel("results/correlation_matrix.xlsx", index=False, engine='openpyxl')
