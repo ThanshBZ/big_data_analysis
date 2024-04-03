@@ -28,6 +28,9 @@ if __name__ == '__main__':
     df_data = read_data.read_and_inspect_data(path=dataset_file_path)
 
     df_numeric = data_analysis.replace_strings_in_dataset_with_integer(df_data)
+    with pd.ExcelWriter('results/data_info.xlsx', mode='a', if_sheet_exists='replace', engine='openpyxl') as writer:
+        df_numeric.describe().to_excel(writer, sheet_name='Describe')
+
 
     # analyze data
     # # 1. analyze the correlation between "Home Location" and "Internet facility in your locality"
