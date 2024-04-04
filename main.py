@@ -25,19 +25,17 @@ if __name__ == '__main__':
     # read and inspect dataset
     dataset_file_path = '/home/weifengzhou/SKEMA_Business_School/Big Data and applied data analytics in supply chain ' \
                         'management - Common Resources/Big Data Team Project/archive/ONLINE EDUCATION SYSTEM REVIEW.csv'
+    # encoding: replace the string values in the dataset by numerical values.
     df_data = read_data.read_and_inspect_data(path=dataset_file_path)
-
+    # store the data description after encoding
     df_numeric = data_analysis.replace_strings_in_dataset_with_integer(df_data)
     with pd.ExcelWriter('results/data_info.xlsx', mode='a', if_sheet_exists='replace', engine='openpyxl') as writer:
-        df_numeric.describe().to_excel(writer, sheet_name='Describe')
-
+        df_numeric.describe().to_excel(writer, sheet_name='DescribeAfterEncoding')
 
     # analyze data
-    # # 1. analyze the correlation between "Home Location" and "Internet facility in your locality"
-    # data_analysis.analyze_coorelation_between_home_location_and_internet_facility(df_numeric)
-    # 2. analyze the importance of different factors to "Performance in online"
+    # 1. analyze the importance of different factors to "Performance in online"
     data_analysis.analyze_important_factors_to_performance_in_online(df_numeric)
-    # 3. analyze all correlations
+    # 2. analyze all correlations
     data_analysis.analyze_correlation_matrix(df_numeric)
 
     # data visualization

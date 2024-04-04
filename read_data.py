@@ -88,13 +88,3 @@ def read_and_inspect_data(path=''):
     inspect_data(df)
 
     return df
-
-
-if __name__ == '__main__':
-    set_pandas_options()
-
-    input_file_path = '/home/weifengzhou/SKEMA_Business_School/Big Data and applied data analytics in supply chain ' \
-                      'management - Common Resources/Big Data Team Project/archive/ONLINE EDUCATION SYSTEM REVIEW.csv'
-    df_data = read_input_file(path=input_file_path)
-
-    inspect_data(df_data)
