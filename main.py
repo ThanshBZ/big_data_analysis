@@ -23,8 +23,9 @@ if __name__ == '__main__':
     print(f"'{'results'}' folder has been created.")
 
     # read and inspect dataset
-    dataset_file_path = '/home/weifengzhou/SKEMA_Business_School/Big Data and applied data analytics in supply chain ' \
-                        'management - Common Resources/Big Data Team Project/archive/ONLINE EDUCATION SYSTEM REVIEW.csv'
+    dataset_file_path = '/home/weifengzhou/SKEMA_Business_School/Big Data and applied data analytics in supply chain' \
+                        ' management - Common Resources/Big Data Team Project/final_code_and_process/cleansed_data/' \
+                        'ONLINE EDUCATION SYSTEM REVIEW - BIG DATA PROJECT2.csv'
     # encoding: replace the string values in the dataset by numerical values.
     df_data = read_data.read_and_inspect_data(path=dataset_file_path)
     # store the data description after encoding
